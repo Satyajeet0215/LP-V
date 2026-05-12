@@ -1,0 +1,119 @@
+# ---------------------------------------
+# Fashion MNIST Classification using CNN
+# Simple Practical Program
+# ---------------------------------------
+
+# 1. Import Libraries
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+import tensorflow as tf
+
+from tensorflow.keras.datasets import fashion_mnist
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D
+from tensorflow.keras.layers import Flatten, Dense, Dropout
+
+# 2. Load Dataset
+(x_train, y_train), (x_test, y_test) = fashion_mnist.load_data()
+
+# 3. Reshape and Normalize Data
+x_train = x_train.reshape(-1,28,28,1) / 255.0
+x_test  = x_test.reshape(-1,28,28,1) / 255.0
+
+# 4. Build CNN Model
+model = Sequential()
+
+# First Convolution Layer
+model.add(Conv2D(
+    128,
+    kernel_size=(3,3),
+    activation='relu',
+    input_shape=(28,28,1)
+))
+
+# Pooling Layer
+model.add(MaxPooling2D())
+
+# Convert 2D into 1D
+model.add(Flatten())
+
+# Dropout Layer
+model.add(Dropout(0.2))
+
+# Dense Layer
+model.add(Dense(128, activation='relu'))
+
+# Output Layer
+model.add(Dense(10, activation='softmax'))
+
+# 5. Compile Model
+model.compile(
+    optimizer='adam',
+    loss='sparse_categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+# Show Model Summary
+model.summary()
+
+# 6. Train Model
+model.fit(
+    x_train,
+    y_train,
+    epochs=5
+)
+
+# 7. Evaluate Model
+metrics = model.evaluate(x_test, y_test)
+
+# Print Accuracy
+print("Test Accuracy :", metrics[1])
+
+# 8. Predict Single Image
+image_index = 4
+
+class_names = [
+    'T-shirt/top',
+    'Trouser',
+    'Pullover',
+    'Dress',
+    'Coat',
+    'Sandal',
+    'Shirt',
+    'Sneaker',
+    'Bag',
+    'Ankle boot'
+]
+
+prediction = model.predict(
+    x_test[image_index:image_index+1]
+)
+
+predicted_label = np.argmax(prediction)
+
+true_label = y_test[image_index]
+
+# Print Prediction
+print("Predicted :", class_names[predicted_label])
+
+print("Actual :", class_names[true_label])
+
+# Check Prediction
+if predicted_label == true_label:
+    print("Correct Label Predicted")
+else:
+    print("Incorrect Label Predicted")
+
+# 9. Show Image
+plt.imshow(
+    x_test[image_index].reshape(28,28),
+    cmap='gray'
+)
+
+plt.title(class_names[predicted_label])
+
+plt.axis('off')
+
+plt.show()
