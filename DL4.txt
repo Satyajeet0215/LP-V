@@ -1,0 +1,95 @@
+# -----------------------------------------
+# Google Stock Price Prediction using RNN
+# -----------------------------------------
+
+# 1. Import Libraries
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import SimpleRNN, Dense, Dropout
+
+# 2. Load Dataset
+data = pd.read_csv("goog.csv")
+
+# Use Open column
+prices = data[['Open']].values
+
+# 3. Normalize Data
+scaler = MinMaxScaler()
+prices = scaler.fit_transform(prices)
+
+# 4. Create Dataset
+X = []
+y = []
+
+window = 20
+
+for i in range(window, len(prices)):
+    X.append(prices[i-window:i])
+    y.append(prices[i])
+
+X = np.array(X)
+y = np.array(y)
+
+# 5. Train-Test Split
+split = int(len(X) * 0.8)
+
+X_train = X[:split]
+y_train = y[:split]
+
+X_test = X[split:]
+y_test = y[split:]
+
+# 6. Build RNN Model
+model = Sequential()
+
+# First RNN Layer
+model.add(SimpleRNN(
+    64,
+    return_sequences=True,
+    input_shape=(window, 1)
+))
+model.add(Dropout(0.2))
+
+# Second RNN Layer
+model.add(SimpleRNN(64))
+model.add(Dropout(0.2))
+
+# Dense Layers
+model.add(Dense(32, activation='relu'))
+model.add(Dense(1))
+
+# 7. Compile Model
+model.compile(
+    optimizer='adam',
+    loss='mean_squared_error'
+)
+
+# 8. Train Model
+model.fit(
+    X_train,
+    y_train,
+    epochs=30,
+    batch_size=32
+)
+
+# 9. Prediction
+predicted = model.predict(X_test)
+
+# Convert back to original scale
+predicted = scaler.inverse_transform(predicted)
+real = scaler.inverse_transform(y_test)
+
+# 10. Plot Results
+plt.plot(real, label='Real Price')
+plt.plot(predicted, label='Predicted Price')
+
+plt.title("Google Stock Price Prediction using RNN")
+plt.xlabel("Days")
+plt.ylabel("Price")
+plt.legend()
+
+plt.show()
