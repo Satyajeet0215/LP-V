@@ -1,0 +1,88 @@
+# Step 1 : Import Libraries
+import pandas as pd
+import tensorflow as tf
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+
+
+# Step 2 : Load Dataset
+df = pd.read_csv("HousingData.csv")
+
+# Remove empty values
+df = df.dropna()
+
+
+# Step 3 : Input and Output
+X = df.drop("MEDV", axis=1)
+y = df["MEDV"]
+
+
+# Step 4 : Split Data
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2
+)
+
+
+# Step 5 : Scale Data
+scaler = StandardScaler()
+
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+
+# Step 6 : Create Model
+model = Sequential()
+
+# Hidden Layer 1
+model.add(Dense(64, activation='relu', input_shape=(X_train.shape[1],)))
+
+# Hidden Layer 2
+model.add(Dense(32, activation='relu'))
+
+# Output Layer
+model.add(Dense(1))
+
+
+# Step 7 : Compile Model
+model.compile(
+    optimizer='adam',
+    loss='mse',
+    metrics=['mae']
+)
+
+
+# Step 8 : Train Model
+model.fit(
+    X_train,
+    y_train,
+    epochs=200
+)
+
+
+# Step 9 : Test Model
+loss, mae = model.evaluate(X_test, y_test)
+
+print("Loss (MSE) :", loss)
+print("MAE :", mae)
+
+
+# Step 10 : Prediction
+pred = model.predict(X_test)
+
+print("Predicted Value :", pred[0])
+
+
+# Step 11 : Plot Graph
+plt.scatter(y_test, pred)
+
+plt.xlabel("Actual Price")
+plt.ylabel("Predicted Price")
+
+plt.title("Actual vs Predicted House Prices")
+
+plt.show()
